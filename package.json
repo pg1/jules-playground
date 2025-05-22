@@ -9,5 +9,8 @@
   "author": "pg1",
   "dependencies": {
     "express": "4.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
