@@ -1,0 +1,13 @@
+{
+  "name": "Jules Playground",
+  "version": "1.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "npm install && node app.js"
+  },
+  "author": "pg1",
+  "dependencies": {
+    "express": "4.0.0"
+  }
+}
