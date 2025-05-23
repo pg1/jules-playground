@@ -1,89 +1,108 @@
-const express = require('express');
-const app = express();
-// Ensure database is initialized
-const db = require('./database.js'); 
+const fastify = require('fastify')({ logger: true }); // Initialize Fastify with logging
+const db = require('./database.js'); // Ensures database is initialized
 const userService = require('./userService.js');
+const path = require('path');
 
-app.use(express.json()); // Middleware to parse JSON bodies
-app.use(express.urlencoded({ extended: false })); // Middleware for URL-encoded bodies
+// Register Fastify sensible for good defaults and error handling
+fastify.register(require('@fastify/sensible'));
+
+// Register Fastify static for serving static files
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/', // serve files from the root of the domain
+});
+
+// --- User API Routes ---
 
 // Add a new user
-app.post('/users', async (req, res) => {
-    const { username, email, password } = req.body;
+fastify.post('/users', async (request, reply) => {
+    const { username, email, password } = request.body;
     if (!username || !email || !password) {
-        return res.status(400).json({ error: 'Username, email, and password are required.' });
+        return reply.badRequest('Username, email, and password are required.');
     }
     try {
         const newUser = await userService.addUser(username, email, password);
-        res.status(201).json(newUser);
+        return reply.code(201).send(newUser);
     } catch (err) {
-        console.error("Error adding user:", err);
+        fastify.log.error({ msg: "Error adding user", error: err.message, stack: err.stack });
         if (err.message.includes('UNIQUE constraint failed')) {
-            return res.status(409).json({ error: 'Username or email already exists.' });
+            return reply.conflict('Username or email already exists.');
         }
-        res.status(500).json({ error: 'Failed to add user.' });
+        return reply.internalServerError('Failed to add user.');
     }
 });
 
 // Get a user by ID
-app.get('/users/:id', async (req, res) => {
-    const { id } = req.params;
+fastify.get('/users/:id', async (request, reply) => {
+    const { id } = request.params;
     try {
         const user = await userService.getUserById(parseInt(id));
         if (user) {
-            res.json(user);
+            return reply.send(user);
         } else {
-            res.status(404).json({ error: 'User not found.' });
+            return reply.notFound('User not found.');
         }
     } catch (err) {
-        console.error(`Error getting user ${id}:`, err);
-        res.status(500).json({ error: 'Failed to get user.' });
+        fastify.log.error({ msg: `Error getting user ${id}`, error: err.message, stack: err.stack });
+        return reply.internalServerError('Failed to get user.');
     }
 });
 
 // Update a user
-app.put('/users/:id', async (req, res) => {
-    const { id } = req.params;
-    const { email, password } = req.body;
+fastify.put('/users/:id', async (request, reply) => {
+    const { id } = request.params;
+    const { email, password } = request.body;
 
     if (!email && !password) {
-        return res.status(400).json({ error: 'Email or password is required for update.' });
+        return reply.badRequest('Email or password is required for update.');
     }
 
     try {
         const result = await userService.updateUser(parseInt(id), { email, password });
         if (result) {
-            res.json({ message: `User ${id} updated successfully.`, changes: result.changes });
+            return reply.send({ message: `User ${id} updated successfully.`, changes: result.changes });
         } else {
-            res.status(404).json({ error: 'User not found or no changes made.' });
+            return reply.notFound('User not found or no changes made.');
         }
     } catch (err) {
-        console.error(`Error updating user ${id}:`, err);
-         if (err.message.includes('UNIQUE constraint failed')) {
-            return res.status(409).json({ error: 'Email already exists.' });
+        fastify.log.error({ msg: `Error updating user ${id}`, error: err.message, stack: err.stack });
+        if (err.message.includes('UNIQUE constraint failed')) {
+            return reply.conflict('Email already exists.');
         }
-        res.status(500).json({ error: 'Failed to update user.' });
+        return reply.internalServerError('Failed to update user.');
     }
 });
 
 // Delete a user
-app.delete('/users/:id', async (req, res) => {
-    const { id } = req.params;
+fastify.delete('/users/:id', async (request, reply) => {
+    const { id } = request.params;
     try {
         const result = await userService.deleteUser(parseInt(id));
         if (result) {
-            res.json({ message: `User ${id} deleted successfully.`, deleted: result.deleted });
+            return reply.send({ message: `User ${id} deleted successfully.`, deleted: result.deleted });
         } else {
-            res.status(404).json({ error: 'User not found.' });
+            return reply.notFound('User not found.');
         }
     } catch (err) {
-        console.error(`Error deleting user ${id}:`, err);
-        res.status(500).json({ error: 'Failed to delete user.' });
+        fastify.log.error({ msg: `Error deleting user ${id}`, error: err.message, stack: err.stack });
+        return reply.internalServerError('Failed to delete user.');
     }
 });
 
-app.get("/test", (req, res) => res.json({ ok: true }));
-
-app.listen(3000, () => {
-  console.log("Test started.");
+// Basic test route
+fastify.get('/test', async (request, reply) => {
+  return reply.send({ ok: true });
 });
+
+// --- Server Start ---
+const start = async () => {
+    try {
+        await fastify.listen({ port: 3000 });
+        fastify.log.info(`Server listening on ${fastify.server.address().port}`);
+    } catch (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+};
+
+start();
