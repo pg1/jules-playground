@@ -3,8 +3,11 @@
   "version": "1.0",
   "description": "",
   "main": "app.js",
+  "type": "module",
   "scripts": {
-    "start": "npm install && node app.js"
+    "build": "rimraf ./dist && tsc",
+    "start": "node ./dist/app.js",
+    "dev": "nodemon --watch \"./*.ts\" --exec ts-node ./app.ts"
   },
   "author": "pg1",
   "dependencies": {
@@ -16,5 +19,14 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7",
+    "@types/bcrypt": "^5.0.2",
+    "ts-node": "^10.9.2",
+    "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "@types/sqlite3": "^3.1.11"
   }
 }
