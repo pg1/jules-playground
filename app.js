@@ -5,6 +5,7 @@ const db = require('./database.js');
 const userService = require('./userService.js');
 
 app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.urlencoded({ extended: false })); // Middleware for URL-encoded bodies
 
 // Add a new user
 app.post('/users', async (req, res) => {
