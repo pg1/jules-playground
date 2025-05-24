@@ -1,11 +1,14 @@
 import sqlite3 from 'sqlite3';
-import path from 'path'; // Will be used if DBSOURCE needs __dirname later
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Determine the correct path to users.db. 
-// If users.db is in the root, this is fine. 
-// If this script is run from ./dist after compilation, path might need adjustment
-// For now, assume users.db is in the project root.
-const DBSOURCE = "users.db"; 
+// Derive __dirname in ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// DBSOURCE is constructed to point to users.db in the project root,
+// assuming this script (database.ts) is compiled into the 'dist' directory.
+const DBSOURCE = path.join(__dirname, '..', 'users.db');
 
 // Use verbose for more detailed error messages
 const verboseSqlite3 = sqlite3.verbose();
