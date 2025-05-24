@@ -1,10 +1,18 @@
-const sqlite3 = require('sqlite3').verbose();
-const DBSOURCE = "users.db";
+import sqlite3 from 'sqlite3';
+import path from 'path'; // Will be used if DBSOURCE needs __dirname later
 
-const db = new sqlite3.Database(DBSOURCE, (err) => {
+// Determine the correct path to users.db. 
+// If users.db is in the root, this is fine. 
+// If this script is run from ./dist after compilation, path might need adjustment
+// For now, assume users.db is in the project root.
+const DBSOURCE = "users.db"; 
+
+// Use verbose for more detailed error messages
+const verboseSqlite3 = sqlite3.verbose();
+
+const db = new verboseSqlite3.Database(DBSOURCE, (err: Error | null) => {
     if (err) {
-        // Cannot open database
-        console.error(err.message);
+        console.error("Error opening database:", err.message);
         throw err;
     } else {
         console.log('Connected to the SQLite database.');
@@ -14,7 +22,7 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`, (err) => {
+        )`, (err: Error | null) => {
             if (err) {
                 // Table already created or other error
                 console.error("Error creating users table:", err.message);
@@ -26,4 +34,4 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
     }
 });
 
-module.exports = db;
+export default db;

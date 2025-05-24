@@ -1,0 +1,6 @@
+/* Global styles - prefer Tailwind utility classes where possible */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Add custom component styles here if needed, or for things not easily done with Tailwind utilities alone */
